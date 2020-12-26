@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Table</title>
+
+    <style>
+    /*custom table width, you can customize it to your needs */
+        table {
+          width: 50%; 
+        }
+        table, th, td{
+          border: solid 1px #DDD;
+          border-collapse: collapse; padding: 2px 3px; text-align: center;
+        }
+        input[type="text" i]{
+           width: -webkit-fill-available;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <form action="#" method="post" name="theform">
+            <table id="table">
+                <tbody>
+                    <tr>
+                        <th><input type="button" value="Remove" onclick="removeRow()"></th>
+                        <th><input type="text" name="table[0][1]" value="Name"></th>
+                        <th><input type="text" name="table[0][2]" value="Description"></th>
+                    </tr>
+                    <tr>
+                        <td><input type="button" value="Remove" onclick="removeRow()"></td>
+                        <td><input type="text" name="table[1][1]" value=""></td>
+                        <td><input type="text" name="table[1][2]" value=""></td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+        <br><input type="button" name="button" value="Add new cell" onclick="addCell()"><br><br>
+        <input type="button" name="new-input" value="Add column" onclick="addRow()">
+        <br>
+        <input type="button" value="Submit" onclick="submit()">
+
+    </div>
+    <?php if ($_POST) :?>
+        <?php $len = count($_POST['table']); ?>
+            <table id="table">
+                <tbody>
+                    <tr>
+                        <?php foreach ($_POST['table'][0] as $value_th) :?>
+                            <th><?php echo $value_th; ?></th>
+                        <?php endforeach; ?>
+                    </tr>
+
+                    <?php for ($i=1; $i < $len; $i++) :?>
+                        <tr>
+                        <?php foreach ($_POST['table'][$i] as $key => $value) :?>
+                            <td><?php echo $value; ?></thd>
+                        <?php endforeach; ?>
+                        </tr>
+
+                    <?php endfor; ?>
+
+                </tbody>
+            </table>
+    <?php endif; ?>
+<script type="text/javascript">
+    var arrHead = new Array();
+    arrHead = ['', 'Name', 'Description'];
+
+    function addCell(){
+        var empTab = document.getElementById('table');
+        var all_rows = empTab.rows;
+        var cntr = empTab.rows.length;
+
+        for (var l = 0; l < all_rows.length; l++) {
+
+            var x = all_rows[l].cells.length;
+
+            var newCell = all_rows[l].insertCell(-1);
+            var cr_el = document.createElement('input');
+            cr_el.setAttribute('type', 'text');
+            cr_el.setAttribute('value', '');
+            cr_el.setAttribute('name', 'table['+l+']['+x+']');
+            newCell.appendChild(cr_el);
+        }
+            arrHead.push(newCell);
+
+    }
+
+    function addRow($val){
+
+        var empTab = document.getElementById('table');
+        var cntr = empTab.rows.length;
+        var tr = empTab.insertRow(cntr);
+        for (var i = 0; i < arrHead.length; i++) {
+            var td = document.createElement('td');
+            td = tr.insertCell(i);
+           
+            if (i == 0) {
+                var button = document.createElement('input');
+
+                button.setAttribute('type', 'button');
+                button.setAttribute('value', 'Remove');
+                button.setAttribute('onclick', 'removeRow(this)');
+
+                td.appendChild(button);
+
+            } else{
+                var tmp_val='';
+                if (typeof $val !="undefined" && typeof $val !=null) {
+                    if (typeof $val[i - 1] !== "undefined") {
+                        tmp_val = $val[i - 1];
+                    }
+                }
+
+                var ele = document.createElement('input');
+                ele.setAttribute('type', 'text');
+                ele.setAttribute('name', 'table['+cntr+']['+i+']');
+                ele.setAttribute('value', tmp_val);
+
+                td.appendChild(ele);
+            }
+        }
+
+    }
+
+    function submit() {
+        var arrValues = new Array();
+        var myTab = document.getElementById('table');
+        var count = myTab.rows.length;
+
+        for (var row = 1; row < myTab.rows.length; row++) {
+            var er = myTab.rows[row];
+            var num_cells = er.cells;
+
+            var tdValues = new Array();
+            for (var i = 1; i < num_cells.length; i++) {
+
+                tdValues.push(num_cells[i].childNodes[0].value);
+            }
+
+            arrValues.push(tdValues);
+        }
+        document.theform.submit();
+
+    }
+
+    function removeRow(btn) {
+        var empTab = document.getElementById('table');
+        empTab.deleteRow(btn.parentNode.parentNode.rowIndex);
+    }
+</script>
+
+</body>
+</html>
