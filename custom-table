@@ -1,71 +1,112 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dynamic Table</title>
+add_filter( 'woocommerce_product_data_tabs', 'add_my_custom_product_data_tab' , 99 , 1 );
 
-    <style>
-    /*custom table width, you can customize it to your needs */
-        table {
-          width: 50%; 
-        }
-        table, th, td{
-          border: solid 1px #DDD;
-          border-collapse: collapse; padding: 2px 3px; text-align: center;
-        }
-        input[type="text" i]{
+function add_my_custom_product_data_tab( $product_data_tabs ) {
+    $product_data_tabs['my-custom-tab'] = array(
+        'label' => __( 'Custom table', 'my_text_domain' ),
+        'target' => 'my_custom_product_data',
+    );
+    return $product_data_tabs;
+}
+
+add_action( 'woocommerce_product_data_panels', 'add_my_custom_product_data_fields' );
+
+function add_my_custom_product_data_fields() {
+    global $woocommerce, $post;
+    $post_id = $post->ID;
+    $custom_field_data = get_post_meta( $post_id, '_custom_table_data', true );
+    ?>
+    <div id="my_custom_product_data" class="panel woocommerce_options_panel">
+		<style>
+		.btt{
+			position: absolute;
+			bottom: 45px;
+			right: 50px;
+		}
+		#table th{
+			position: relative;
+			font-weight: unset;
+		}
+		#table input[type="text" i] {
            width: -webkit-fill-available;
         }
-    </style>
-</head>
-<body>
-    <div id="container">
-        <form action="#" method="post" name="theform">
-            <table id="table">
-                <tbody>
+		#table1 th{
+			position: relative;
+		}
+		#table1 input[type="text" i] {
+           width: -webkit-fill-available;
+        }
+		#table{
+			position: relative;
+		}
+		.cus-form-tab{
+			padding: 25px;
+		}
+		.cus-form-tab #table tbody tr .btn-rm-cl{
+			position: absolute;
+			display: block;
+			top: -40px;
+			margin-left: 45px;
+		}
+		#table tr:first-child th:first-child input{
+			visibility: hidden;
+		}
+</style>
+		<p>
+			Table attributes
+		</p>
+        <?php $arrays_head = array_slice($custom_field_data, 0, 1); ?>
+        <?php $arrays = array_slice($custom_field_data, 1); ?>
+
+        <?php if(!empty($custom_field_data) && count($custom_field_data) > 1): ?>
+                <div class="cus-form-tab">
+                    <table id="table">
+                        <tbody>
+                        <?php foreach($arrays_head as $ks => $vals): ?>
+                            <tr>
+                                <th><input type="button" value="Remove" onclick="removeRow(this)"></th>
+                                <?php foreach($vals as $keys => $value): ?>
+                                    <th>
+                                        <input type="text" name="table[<?=$ks?>][<?=$keys?>]" value="<?=$value?>">
+                                        <input type="button" value="Remove row" class="btn-rm-cl" onclick="removeColumnD(this)">
+                                    </th>
+                                <?php endforeach; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php foreach($arrays as $k => $val): ?>
+                        <tr>
+                            <th><input type="button" value="Remove" onclick="removeRow(this)"></th>
+                            <?php foreach($val as $key => $value): ?>
+                                <th>
+                                    <input type="text" name="table[<?=$k+1?>][<?=$key?>]" value="<?=$value?>">
+                                </th>
+                            <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <br><input type="button" name="button" value="Add new cell" onclick="addCellD(this)">
+                    <input type="button" name="new-input" value="Add column" onclick="addRowD(this)">
+                </div>
+        <?php else: ?>
+            <div class="cus-form-tab">
+                <table id="table">
+                    <tbody>
                     <tr>
                         <th><input type="button" value="Remove" onclick="removeRow()"></th>
                         <th><input type="text" name="table[0][1]" value="Name"></th>
-                        <th><input type="text" name="table[0][2]" value="Description"></th>
                     </tr>
-                    <tr>
-                        <td><input type="button" value="Remove" onclick="removeRow()"></td>
-                        <td><input type="text" name="table[1][1]" value=""></td>
-                        <td><input type="text" name="table[1][2]" value=""></td>
-                    </tr>
-                </tbody>
-            </table>
-        </form>
-        <br><input type="button" name="button" value="Add new cell" onclick="addCell()"><br><br>
-        <input type="button" name="new-input" value="Add column" onclick="addRow()">
-        <br>
-        <input type="button" value="Submit" onclick="submit()">
+                    </tbody>
+                </table>
+                <br><input type="button" name="button" value="Add new cell" onclick="addCell()">
+                <input type="button" name="new-input" value="Add column" onclick="addRow()">
+            </div>
+        <?php endif; ?>
 
-    </div>
-    <?php if ($_POST) :?>
-        <?php $len = count($_POST['table']); ?>
-            <table id="table">
-                <tbody>
-                    <tr>
-                        <?php foreach ($_POST['table'][0] as $value_th) :?>
-                            <th><?php echo $value_th; ?></th>
-                        <?php endforeach; ?>
-                    </tr>
+	<script type="text/javascript">
+        $('.btn-rm-cl').first().hide();
 
-                    <?php for ($i=1; $i < $len; $i++) :?>
-                        <tr>
-                        <?php foreach ($_POST['table'][$i] as $key => $value) :?>
-                            <td><?php echo $value; ?></thd>
-                        <?php endforeach; ?>
-                        </tr>
-
-                    <?php endfor; ?>
-
-                </tbody>
-            </table>
-    <?php endif; ?>
-<script type="text/javascript">
     var arrHead = new Array();
-    arrHead = ['', 'Name', 'Description'];
+    arrHead = ['', 'Name'];
 
     function addCell(){
         var empTab = document.getElementById('table');
@@ -82,9 +123,54 @@
             cr_el.setAttribute('value', '');
             cr_el.setAttribute('name', 'table['+l+']['+x+']');
             newCell.appendChild(cr_el);
-        }
-            arrHead.push(newCell);
 
+            if(l === 0){
+                var button = document.createElement('input');
+
+                button.setAttribute('type', 'button');
+                button.setAttribute('value', 'Remove row');
+                button.setAttribute('class', 'btn-rm-cl');
+                button.setAttribute('onclick', 'removeColumn(this)');
+
+                newCell.appendChild(button);
+
+                empTab.rows[l].appendChild(newCell);
+
+            }
+        }
+        arrHead.push(newCell);
+    }
+
+    function addCellD(){
+        var empTab = document.getElementById('table');
+        var all_rows = empTab.rows;
+        var cntr = empTab.rows.length;
+
+        for (let l = 0; l < all_rows.length; l++) {
+
+            var x = all_rows[l].cells.length;
+
+            var newCell = all_rows[l].insertCell(-1);
+            var cr_el = document.createElement('input');
+            cr_el.setAttribute('type', 'text');
+            cr_el.setAttribute('value', '');
+            cr_el.setAttribute('name', 'table['+l+']['+x+']');
+            newCell.appendChild(cr_el);
+
+            if(l === 0){
+                var button = document.createElement('input');
+
+                button.setAttribute('type', 'button');
+                button.setAttribute('value', 'Remove row');
+                button.setAttribute('class', 'btn-rm-cl');
+                button.setAttribute('onclick', 'removeColumnD(this)');
+
+                newCell.appendChild(button);
+
+                empTab.rows[l].appendChild(newCell);
+
+            }
+        }
     }
 
     function addRow($val){
@@ -95,7 +181,45 @@
         for (var i = 0; i < arrHead.length; i++) {
             var td = document.createElement('td');
             td = tr.insertCell(i);
-           
+
+            if (i == 0) {
+                var button = document.createElement('input');
+
+                button.setAttribute('type', 'button');
+                button.setAttribute('value', 'Remove');
+                button.setAttribute('onclick', 'removeRow(this)');
+
+                td.appendChild(button);
+
+            } else{
+                var tmp_val='';
+                if (typeof $val !="undefined" && typeof $val !=null) {
+                    if (typeof $val[i - 1] !== "undefined") {
+                        tmp_val = $val[i - 1];
+                    }
+                }
+
+                var ele = document.createElement('input');
+                ele.setAttribute('type', 'text');
+                ele.setAttribute('name', 'table['+cntr+']['+i+']');
+                ele.setAttribute('value', tmp_val);
+
+                td.appendChild(ele);
+            }
+        }
+    }
+    function addRowD($val){
+
+        var empTab = document.getElementById('table');
+        var cntr = empTab.rows.length;
+        var cntr_h = empTab.rows[0].cells;
+        arrHead= cntr_h;
+        var tr = empTab.insertRow(cntr);
+
+        for (let i = 0; i < arrHead.length; i++) {
+            var td = document.createElement('td');
+            td = tr.insertCell(i);
+
             if (i == 0) {
                 var button = document.createElement('input');
 
@@ -138,18 +262,90 @@
 
                 tdValues.push(num_cells[i].childNodes[0].value);
             }
-
             arrValues.push(tdValues);
         }
+        arrHead.push(arrValues);
         document.theform.submit();
-
     }
 
     function removeRow(btn) {
         var empTab = document.getElementById('table');
         empTab.deleteRow(btn.parentNode.parentNode.rowIndex);
     }
-</script>
+    function removeColumn(btn) {
+        var empTab = document.getElementById('table');
+        var cell=btn.parentNode.cellIndex;
 
-</body>
-</html>
+        arrHead.splice(cell, 1);
+        for (var r = 0; r < empTab.rows.length; r++) {
+            empTab.rows[r].deleteCell(cell)
+        }
+    }
+    function removeColumnD(btn) {
+        var empTab = document.getElementById('table');
+        var cell=btn.parentNode.cellIndex;
+
+        for (var r = 0; r < empTab.rows.length; r++) {
+            empTab.rows[r].deleteCell(cell)
+        }
+    }
+
+</script>
+    </div>
+<?php
+}
+
+add_action( 'woocommerce_process_product_meta', 'woocommerce_process_product_meta_fields_save' );
+function woocommerce_process_product_meta_fields_save( $post_id ){
+   
+   if (isset($_POST['table'])) {
+       update_post_meta( $post_id, '_custom_table_data', $_POST['table'] );
+   }
+}
+
+add_filter( 'woocommerce_product_tabs', 'ny_woo_custom_table_tab', 98 );
+function ny_woo_custom_table_tab( $tabs ) {
+
+    $post_id = get_the_ID();
+    $get_val = get_post_meta( $post_id, '_custom_table_data', true);
+
+    if (!empty($get_val)) {
+        $tabs['custom_table'] = array(
+            'title'     => __( 'Table Information', 'woocommerce' ),
+            'priority'  => 50,
+            'callback'  => 'my_woo_custom_custom_table_tab_content'
+        );
+    }
+
+    return $tabs;
+}
+
+function my_woo_custom_custom_table_tab_content() {
+    $post_id = get_the_ID();
+    $get_val = get_post_meta( $post_id, '_custom_table_data', true);
+?>
+
+    <?php if (!empty($get_val) && count($get_val) > 1) :?>
+        <?php $len = count($get_val); ?>
+        <table id="table1">
+            <tbody>
+                <tr>
+                    <?php foreach ($get_val[0] as $value_th) :?>
+                        <th><?php echo $value_th; ?></th>
+                    <?php endforeach; ?>
+                </tr>
+
+                <?php for ($i=1; $i < $len; $i++) :?>
+                    <tr>
+                    <?php foreach ($get_val[$i] as $value) :?>
+                        <td><?php echo $value; ?></td>
+                    <?php endforeach; ?>
+                    </tr>
+
+                <?php endfor; ?>
+
+            </tbody>
+        </table>
+    <?php endif;?>
+<?php
+}
